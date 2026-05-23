@@ -1,16 +1,43 @@
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
-.pytest_cache/
-.ruff_cache/
-.venv/
-venv/
-.env
-*.log
-logs/
-.coverage
-htmlcov/
+*.egg
+.eggs/
 dist/
 build/
+pip-wheel-metadata/
+
+# Virtual environments (любые варианты названий)
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Tests / coverage / линтеры
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# Конфиг и логи
+.env
+.env.local
+.env.*.local
+*.log
+logs/
+
+# IDE
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
