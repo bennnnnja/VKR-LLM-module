@@ -1,0 +1,7 @@
+STUB-промпт для testcases_task. Финальная версия — в фазе 3.
+
+Задание на программирование:
+{task_text}
+
+Сгенерируй {count} тест-кейсов на {language}.
+Верни строгий JSON по схеме TestcasesLLMOutput.

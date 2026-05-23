@@ -1,0 +1,6 @@
+STUB-промпт для discipline_*_task. Финальная версия — в фазе 3.
+
+Текст для классификации:
+{text}
+
+Верни строгий JSON по схеме DisciplineLLMOutput.

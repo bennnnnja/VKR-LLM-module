@@ -1,0 +1,9 @@
+STUB-промпт для recommendations_task. Финальная версия — в фазе 3.
+
+Задание:
+{task_text}
+
+Ответ студента:
+{student_answer}
+
+Верни строгий JSON по схеме RecommendationsLLMOutput.

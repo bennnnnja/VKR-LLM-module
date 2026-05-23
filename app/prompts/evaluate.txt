@@ -1,0 +1,12 @@
+STUB-промпт для evaluate_task. Финальная версия — в фазе 3.
+
+Задание:
+{task_text}
+
+Эталонный ответ:
+{reference_answer}
+
+Ответ студента:
+{student_answer}
+
+Верни строгий JSON по схеме EvaluateLLMOutput.

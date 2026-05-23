@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - llm_net
+
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - ./logs:/app/logs
+    networks:
+      - llm_net
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - ./logs:/app/logs
+    networks:
+      - llm_net
+    command: >
+      sh -c "celery -A app.workers.celery_app worker
+      --concurrency=$${CELERY_WORKER_CONCURRENCY:-2}
+      --prefetch-multiplier=$${CELERY_PREFETCH_MULTIPLIER:-1}
+      --loglevel=info"
+
+volumes:
+  redis_data:
+
+networks:
+  llm_net:
+    driver: bridge
