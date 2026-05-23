@@ -9,6 +9,7 @@ from app.config import settings
 # Пути, которым НЕ требуется X-API-Key
 _PUBLIC_PREFIXES: tuple[str, ...] = (
     "/health",
+    "/config",
     "/sandbox",
     "/ui-kit",
     "/static",

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Grading Sandbox</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<div class="layout">
+    <header class="topbar">
+        <div>
+            <h1>LLM Grading — Sandbox</h1>
+            <nav>
+                <a href="/sandbox" class="active">Sandbox</a>
+                <a href="/ui-kit">UI Kit</a>
+                <a href="/docs" target="_blank">OpenAPI</a>
+            </nav>
+        </div>
+        <div class="api-key-row">
+            <label for="api-key" style="margin:0">X-API-Key</label>
+            <input type="text" id="api-key" placeholder="введите API-key" autocomplete="off" />
+        </div>
+    </header>
+
+    <div class="global-config" id="global-config">
+        <h3>Конфигурация моделей и доступности</h3>
+        <div class="empty-hint">загрузка /config…</div>
+    </div>
+
+    <!-- ─────────── 1. evaluate/task ─────────── -->
+    <section class="section" data-section="evaluate">
+        <h2>
+            POST /evaluate/task
+            <span class="badge-async">async</span>
+            <span class="method">application/json</span>
+        </h2>
+        <p class="meta">
+            Оценка развёрнутого ответа студента.
+            target_model: <strong data-target="evaluate">…</strong>
+            · resolution preview: <span class="resolution-tag" data-preview="evaluate">…</span>
+        </p>
+        <div class="grid">
+            <div>
+                <label>Тело запроса</label>
+                <textarea data-input>{
+  "task_text": "Объясните своими словами, что такое полиморфизм в ООП.",
+  "reference_answer": "Полиморфизм — способность объектов разных типов реагировать на один и тот же вызов по-разному, обычно через переопределение методов.",
+  "student_answer": "Это когда разные классы могут иметь методы с одинаковым именем, и при вызове срабатывает тот, что соответствует типу объекта."
+}</textarea>
+                <div class="actions">
+                    <button class="primary" data-send>Отправить</button>
+                    <button class="danger" data-cancel disabled>Отменить</button>
+                    <button class="ghost" data-clear>Очистить вывод</button>
+                </div>
+            </div>
+            <div>
+                <div class="kv-row">
+                    <span class="k">jobId</span>
+                    <span class="v" data-job-id>—</span>
+                </div>
+                <div class="kv-row">
+                    <span class="k">status</span>
+                    <span class="v"><span class="status-tag" data-status>—</span></span>
+                </div>
+                <div class="output-panel">
+                    <h4>result</h4>
+                    <pre class="json" data-result>—</pre>
+                </div>
+                <div class="llm-log">
+                    <h4>llm_log</h4>
+                    <div class="kv-row"><span class="k">target_model</span><span class="v" data-llm-target>—</span></div>
+                    <div class="kv-row"><span class="k">actual_model</span><span class="v" data-llm-actual>—</span></div>
+                    <div class="kv-row"><span class="k">resolution</span><span class="v"><span class="resolution-tag" data-llm-resolution>—</span></span></div>
+                    <div class="kv-row"><span class="k">duration_ms</span><span class="v" data-llm-duration>—</span></div>
+                    <div class="kv-row"><span class="k">retries</span><span class="v" data-llm-retries>—</span></div>
+                    <details class="snippet">
+                        <summary>raw_response</summary>
+                        <pre data-llm-raw>—</pre>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─────────── 2. generate/recommendations ─────────── -->
+    <section class="section" data-section="recommendations">
+        <h2>
+            POST /generate/recommendations
+            <span class="badge-async">async</span>
+            <span class="method">application/json</span>
+        </h2>
+        <p class="meta">
+            Текстовые рекомендации студенту.
+            target_model: <strong data-target="recommendations">…</strong>
+            · resolution preview: <span class="resolution-tag" data-preview="recommendations">…</span>
+        </p>
+        <div class="grid">
+            <div>
+                <label>Тело запроса</label>
+                <textarea data-input>{
+  "task_text": "Опишите принцип работы хеш-таблицы.",
+  "student_answer": "Хеш-таблица — это структура где данные хранятся по ключу. Ключ хешируется и по этому хешу находится место в массиве."
+}</textarea>
+                <div class="actions">
+                    <button class="primary" data-send>Отправить</button>
+                    <button class="danger" data-cancel disabled>Отменить</button>
+                    <button class="ghost" data-clear>Очистить вывод</button>
+                </div>
+            </div>
+            <div>
+                <div class="kv-row"><span class="k">jobId</span><span class="v" data-job-id>—</span></div>
+                <div class="kv-row"><span class="k">status</span><span class="v"><span class="status-tag" data-status>—</span></span></div>
+                <div class="output-panel"><h4>result</h4><pre class="json" data-result>—</pre></div>
+                <div class="llm-log">
+                    <h4>llm_log</h4>
+                    <div class="kv-row"><span class="k">target_model</span><span class="v" data-llm-target>—</span></div>
+                    <div class="kv-row"><span class="k">actual_model</span><span class="v" data-llm-actual>—</span></div>
+                    <div class="kv-row"><span class="k">resolution</span><span class="v"><span class="resolution-tag" data-llm-resolution>—</span></span></div>
+                    <div class="kv-row"><span class="k">duration_ms</span><span class="v" data-llm-duration>—</span></div>
+                    <div class="kv-row"><span class="k">retries</span><span class="v" data-llm-retries>—</span></div>
+                    <details class="snippet"><summary>raw_response</summary><pre data-llm-raw>—</pre></details>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─────────── 3. generate/testcases ─────────── -->
+    <section class="section" data-section="testcases">
+        <h2>
+            POST /generate/testcases
+            <span class="badge-async">async</span>
+            <span class="method">application/json</span>
+        </h2>
+        <p class="meta">
+            Генерация тест-кейсов под задачу программирования.
+            target_model: <strong data-target="testcases">…</strong>
+            · resolution preview: <span class="resolution-tag" data-preview="testcases">…</span>
+        </p>
+        <div class="grid">
+            <div>
+                <label>Тело запроса</label>
+                <textarea data-input>{
+  "task_text": "Написать функцию add(a: int, b: int) -> int, возвращающую сумму двух целых чисел.",
+  "language": "python",
+  "count": 5,
+  "include_edge_cases": true
+}</textarea>
+                <div class="actions">
+                    <button class="primary" data-send>Отправить</button>
+                    <button class="danger" data-cancel disabled>Отменить</button>
+                    <button class="ghost" data-clear>Очистить вывод</button>
+                </div>
+            </div>
+            <div>
+                <div class="kv-row"><span class="k">jobId</span><span class="v" data-job-id>—</span></div>
+                <div class="kv-row"><span class="k">status</span><span class="v"><span class="status-tag" data-status>—</span></span></div>
+                <div class="output-panel"><h4>result</h4><pre class="json" data-result>—</pre></div>
+                <div class="llm-log">
+                    <h4>llm_log</h4>
+                    <div class="kv-row"><span class="k">target_model</span><span class="v" data-llm-target>—</span></div>
+                    <div class="kv-row"><span class="k">actual_model</span><span class="v" data-llm-actual>—</span></div>
+                    <div class="kv-row"><span class="k">resolution</span><span class="v"><span class="resolution-tag" data-llm-resolution>—</span></span></div>
+                    <div class="kv-row"><span class="k">duration_ms</span><span class="v" data-llm-duration>—</span></div>
+                    <div class="kv-row"><span class="k">retries</span><span class="v" data-llm-retries>—</span></div>
+                    <details class="snippet"><summary>raw_response</summary><pre data-llm-raw>—</pre></details>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─────────── 4. analyze/test-discipline ─────────── -->
+    <section class="section" data-section="discipline_test">
+        <h2>
+            POST /analyze/test-discipline
+            <span class="badge-async">async</span>
+            <span class="method">application/json</span>
+        </h2>
+        <p class="meta">
+            Классификация дисциплины по полному тексту теста.
+            target_model: <strong data-target="discipline">…</strong>
+            · resolution preview: <span class="resolution-tag" data-preview="discipline">…</span>
+        </p>
+        <div class="grid">
+            <div>
+                <label>Тело запроса</label>
+                <textarea data-input>{
+  "test_text": "Что такое нормализация баз данных? Назовите три нормальные формы и приведите пример приведения отношения к 3НФ."
+}</textarea>
+                <div class="actions">
+                    <button class="primary" data-send>Отправить</button>
+                    <button class="danger" data-cancel disabled>Отменить</button>
+                    <button class="ghost" data-clear>Очистить вывод</button>
+                </div>
+            </div>
+            <div>
+                <div class="kv-row"><span class="k">jobId</span><span class="v" data-job-id>—</span></div>
+                <div class="kv-row"><span class="k">status</span><span class="v"><span class="status-tag" data-status>—</span></span></div>
+                <div class="output-panel"><h4>result</h4><pre class="json" data-result>—</pre></div>
+                <div class="llm-log">
+                    <h4>llm_log</h4>
+                    <div class="kv-row"><span class="k">target_model</span><span class="v" data-llm-target>—</span></div>
+                    <div class="kv-row"><span class="k">actual_model</span><span class="v" data-llm-actual>—</span></div>
+                    <div class="kv-row"><span class="k">resolution</span><span class="v"><span class="resolution-tag" data-llm-resolution>—</span></span></div>
+                    <div class="kv-row"><span class="k">duration_ms</span><span class="v" data-llm-duration>—</span></div>
+                    <div class="kv-row"><span class="k">retries</span><span class="v" data-llm-retries>—</span></div>
+                    <details class="snippet"><summary>raw_response</summary><pre data-llm-raw>—</pre></details>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─────────── 5. analyze/task-discipline (SYNC) ─────────── -->
+    <section class="section" data-section="discipline_task" data-sync="true">
+        <h2>
+            POST /analyze/task-discipline
+            <span class="badge-sync">sync</span>
+            <span class="method">application/json</span>
+        </h2>
+        <p class="meta">
+            Классификация дисциплины по тексту одного задания (синхронный эндпоинт, без Celery).
+            target_model: <strong data-target="discipline">…</strong>
+            · resolution preview: <span class="resolution-tag" data-preview="discipline">…</span>
+        </p>
+        <div class="grid">
+            <div>
+                <label>Тело запроса</label>
+                <textarea data-input>{
+  "task_text": "Реализовать сортировку слиянием для массива целых чисел."
+}</textarea>
+                <div class="actions">
+                    <button class="primary" data-send>Отправить</button>
+                    <button class="ghost" data-clear>Очистить вывод</button>
+                </div>
+            </div>
+            <div>
+                <div class="kv-row"><span class="k">status</span><span class="v"><span class="status-tag" data-status>—</span></span></div>
+                <div class="output-panel"><h4>response</h4><pre class="json" data-result>—</pre></div>
+                <p class="empty-hint">Sync-эндпоинт не возвращает llm_log: он не проходит через JobStore.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+// ─────────── API key persistence ───────────
+const KEY_STORAGE = "vkr_api_key";
+const keyInput = document.getElementById("api-key");
+keyInput.value = localStorage.getItem(KEY_STORAGE) || "";
+keyInput.addEventListener("input", () => localStorage.setItem(KEY_STORAGE, keyInput.value.trim()));
+const apiKey = () => (keyInput.value || "").trim();
+
+// ─────────── /config — заполняем шапку и preview resolution ───────────
+async function loadConfig() {
+    try {
+        const r = await fetch("/config");
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const cfg = await r.json();
+
+        const grid = document.createElement("div");
+        grid.className = "config-grid";
+
+        const items = [
+            ["fallback_strategy", cfg.fallback_strategy],
+            ["fallback_model",    cfg.fallback_model],
+            ["available_models",  cfg.available_models.join(", ")],
+        ];
+        for (const [k, v] of items) {
+            const div = document.createElement("div");
+            div.className = "config-item";
+            div.innerHTML = `<span class="k">${k}</span><span class="v">${escapeHtml(v)}</span>`;
+            grid.appendChild(div);
+        }
+
+        const box = document.getElementById("global-config");
+        box.innerHTML = "<h3>Конфигурация моделей и доступности</h3>";
+        box.appendChild(grid);
+
+        // Заполняем target_model и resolution preview в каждой секции
+        for (const [task, info] of Object.entries(cfg.tasks)) {
+            document.querySelectorAll(`[data-target="${task}"]`).forEach(el => {
+                el.textContent = info.target_model;
+            });
+            document.querySelectorAll(`[data-preview="${task}"]`).forEach(el => {
+                el.textContent = info.model_resolution;
+                el.className = "resolution-tag resolution-" + info.model_resolution;
+            });
+        }
+    } catch (err) {
+        document.getElementById("global-config").innerHTML =
+            `<h3>Конфигурация моделей и доступности</h3><div class="empty-hint">не удалось загрузить /config: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+function escapeHtml(s) {
+    if (s === undefined || s === null) return "";
+    return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+// ─────────── Маппинг секций на эндпоинты ───────────
+const ENDPOINTS = {
+    evaluate:         { url: "/evaluate/task",            sync: false },
+    recommendations:  { url: "/generate/recommendations", sync: false },
+    testcases:        { url: "/generate/testcases",       sync: false },
+    discipline_test:  { url: "/analyze/test-discipline",  sync: false },
+    discipline_task:  { url: "/analyze/task-discipline",  sync: true  },
+};
+
+// ─────────── Логика секций ───────────
+const POLL_INTERVAL_MS = 1500;
+const TERMINAL = new Set(["completed", "failed", "cancelled"]);
+
+document.querySelectorAll(".section").forEach(section => {
+    const id = section.dataset.section;
+    const ep = ENDPOINTS[id];
+    if (!ep) return;
+
+    const $input   = section.querySelector("[data-input]");
+    const $send    = section.querySelector("[data-send]");
+    const $cancel  = section.querySelector("[data-cancel]");
+    const $clear   = section.querySelector("[data-clear]");
+    const $jobId   = section.querySelector("[data-job-id]");
+    const $status  = section.querySelector("[data-status]");
+    const $result  = section.querySelector("[data-result]");
+    const $tgt     = section.querySelector("[data-llm-target]");
+    const $act     = section.querySelector("[data-llm-actual]");
+    const $res     = section.querySelector("[data-llm-resolution]");
+    const $dur     = section.querySelector("[data-llm-duration]");
+    const $retries = section.querySelector("[data-llm-retries]");
+    const $raw     = section.querySelector("[data-llm-raw]");
+
+    let pollHandle = null;
+    let currentJobId = null;
+
+    function setStatus(s) {
+        if (!$status) return;
+        $status.textContent = s || "—";
+        $status.className = "status-tag" + (s ? " status-" + s : "");
+    }
+
+    function applyLLMLog(log) {
+        if (!log) return;
+        if ($tgt) $tgt.textContent = log.target_model || "—";
+        if ($act) $act.textContent = log.actual_model || "—";
+        if ($res) {
+            $res.textContent = log.model_resolution || "—";
+            $res.className = "resolution-tag" + (log.model_resolution ? " resolution-" + log.model_resolution : "");
+        }
+        if ($dur) $dur.textContent = (log.duration_ms ?? "—") + " ms";
+        if ($retries) $retries.textContent = log.retries ?? "—";
+        if ($raw) $raw.textContent = log.raw_response || "—";
+    }
+
+    function resetOutput() {
+        $jobId && ($jobId.textContent = "—");
+        setStatus("");
+        $result.textContent = "—";
+        applyLLMLog({});
+        if ($cancel) $cancel.disabled = true;
+        currentJobId = null;
+        if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
+    }
+
+    $clear.addEventListener("click", resetOutput);
+
+    $send.addEventListener("click", async () => {
+        resetOutput();
+        const key = apiKey();
+        if (!key) {
+            $result.textContent = "Сначала введите X-API-Key в шапке.";
+            return;
+        }
+        let body;
+        try { body = JSON.parse($input.value); }
+        catch (e) {
+            $result.textContent = "Невалидный JSON в теле запроса: " + e.message;
+            return;
+        }
+
+        $send.disabled = true;
+        try {
+            const r = await fetch(ep.url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-Key": key,
+                },
+                body: JSON.stringify(body),
+            });
+            const data = await r.json().catch(() => ({}));
+
+            if (!r.ok) {
+                setStatus("failed");
+                $result.textContent = JSON.stringify(data, null, 2) + "\n\nHTTP " + r.status;
+                return;
+            }
+
+            if (ep.sync) {
+                setStatus("completed");
+                $result.textContent = JSON.stringify(data, null, 2);
+                return;
+            }
+
+            // async-ветка — поллим
+            currentJobId = data.jobId;
+            $jobId.textContent = currentJobId;
+            setStatus("pending");
+            if ($cancel) $cancel.disabled = false;
+
+            pollHandle = setInterval(() => pollJob(currentJobId), POLL_INTERVAL_MS);
+            pollJob(currentJobId);
+        } catch (err) {
+            setStatus("failed");
+            $result.textContent = "Ошибка сети: " + err.message;
+        } finally {
+            $send.disabled = false;
+        }
+    });
+
+    async function pollJob(jobId) {
+        const key = apiKey();
+        try {
+            const r = await fetch(`/jobs/${jobId}`, { headers: { "X-API-Key": key } });
+            if (!r.ok) {
+                setStatus("failed");
+                $result.textContent = `HTTP ${r.status} — ${await r.text()}`;
+                clearInterval(pollHandle); pollHandle = null;
+                return;
+            }
+            const job = await r.json();
+            setStatus(job.status);
+            $result.textContent = JSON.stringify(job.result ?? job.error ?? {}, null, 2);
+            if (job.llm_log) applyLLMLog(job.llm_log);
+            if (TERMINAL.has(job.status)) {
+                clearInterval(pollHandle); pollHandle = null;
+                if ($cancel) $cancel.disabled = true;
+            }
+        } catch (err) {
+            setStatus("failed");
+            $result.textContent = "Ошибка опроса: " + err.message;
+            clearInterval(pollHandle); pollHandle = null;
+        }
+    }
+
+    if ($cancel) {
+        $cancel.addEventListener("click", async () => {
+            if (!currentJobId) return;
+            const key = apiKey();
+            $cancel.disabled = true;
+            try {
+                const r = await fetch(`/jobs/${currentJobId}/cancel`, {
+                    method: "POST",
+                    headers: { "X-API-Key": key },
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    setStatus(data.status);
+                } else {
+                    $result.textContent = "Не удалось отменить: " + JSON.stringify(data);
+                    $cancel.disabled = false;
+                }
+            } catch (err) {
+                $result.textContent = "Ошибка cancel: " + err.message;
+                $cancel.disabled = false;
+            }
+        });
+    }
+});
+
+loadConfig();
+</script>
+</body>
+</html>
