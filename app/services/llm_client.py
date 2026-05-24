@@ -103,7 +103,7 @@ class OllamaClient:
             body["options"] = options
 
         logger.info(
-            "Calling Ollama: model={}, prompt_size={}, active_in_semaphore={}/{}",
+            "Calling Ollama (model={}, prompt={}b, in-flight={}/{})",
             model,
             len(prompt),
             self._active,
@@ -149,6 +149,11 @@ class OllamaClient:
                     eval_count=data.get("eval_count"),
                     prompt_eval_count=data.get("prompt_eval_count"),
                     total_duration_ns=data.get("total_duration"),
+                )
+                logger.info(
+                    "Generation took {:.1f}s, {} tokens",
+                    duration_ms / 1000.0,
+                    meta.eval_count or 0,
                 )
                 return raw_text, meta
             finally:

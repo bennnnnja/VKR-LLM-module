@@ -42,13 +42,9 @@ def run_job(
 
     router = ModelRouter()
     actual_model, mode = router.resolve(target_model)
-    logger.info(
-        "job {} resolved target={} actual={} mode={}",
-        job_id,
-        target_model,
-        actual_model,
-        mode,
-    )
+    logger.info("Target model: {}, resolution: {}", target_model, mode)
+    if mode == "fallback":
+        logger.info("Fallback active → physically calling {}", actual_model)
 
     if mode == "fail":
         store.set_llm_log(
@@ -102,7 +98,7 @@ def run_job(
     )
     store.set_result(job_id, result)
     store.set_finished(job_id, status=JobStatus.completed)
-    logger.info("job {} completed in {}ms (mode={})", job_id, duration_ms, mode)
+    logger.info("Stub completed in {}ms", duration_ms)
 
 
 __all__ = ["run_job", "ResolutionMode"]

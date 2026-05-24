@@ -3,6 +3,9 @@ from __future__ import annotations
 from celery import Celery
 
 from app.config import settings
+from app.logging_config import setup as setup_logging
+
+setup_logging()
 
 celery_app = Celery(
     "llm_grading",

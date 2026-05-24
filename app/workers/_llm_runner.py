@@ -83,10 +83,9 @@ async def _execute(
     await store.set_started(job_id)
 
     actual_model, mode = ModelRouter().resolve(target_model)
-    logger.info(
-        "{}: job={} target={} actual={} mode={}",
-        log_label, job_id, target_model, actual_model, mode,
-    )
+    logger.info("Target model: {}, resolution: {}", target_model, mode)
+    if mode == "fallback":
+        logger.info("Fallback active → physically calling {}", actual_model)
 
     if mode == "fail":
         await _finalize_failed(

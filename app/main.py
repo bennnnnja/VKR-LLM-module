@@ -1,36 +1,22 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from loguru import logger
 
 from app.api.routes_analyze import router as analyze_router
 from app.api.routes_evaluate import router as evaluate_router
 from app.api.routes_generate import router as generate_router
 from app.api.routes_jobs import router as jobs_router
 from app.config import settings
+from app.logging_config import setup as setup_logging
 from app.middleware.auth import APIKeyMiddleware
 from app.middleware.logging import RequestLoggingMiddleware
 from app.services.model_router import ModelRouter
 
-
-def _configure_logging() -> None:
-    logger.remove()
-    logger.add(
-        sys.stdout,
-        serialize=True,
-        backtrace=False,
-        diagnose=False,
-        enqueue=False,
-        level="INFO",
-    )
-
-
-_configure_logging()
+setup_logging()
 
 app = FastAPI(title="LLM Grading Service", version="0.1.0")
 
@@ -47,6 +33,12 @@ app.include_router(jobs_router)
 _static_dir = Path(__file__).parent / "static"
 if _static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
+
+@app.get("/", include_in_schema=False)
+async def root() -> RedirectResponse:
+    # Главная — редирект на sandbox, чтобы комиссия попадала сразу в UI.
+    return RedirectResponse(url="/sandbox", status_code=307)
 
 
 @app.get("/health", tags=["health"])

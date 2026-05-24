@@ -19,7 +19,13 @@ _PUBLIC_PREFIXES: tuple[str, ...] = (
 )
 
 
+def _is_root(path: str) -> bool:
+    return path == "/" or path == ""
+
+
 def _is_public(path: str) -> bool:
+    if _is_root(path):
+        return True
     return any(path == p or path.startswith(p + "/") or path.startswith(p) for p in _PUBLIC_PREFIXES)
 
 

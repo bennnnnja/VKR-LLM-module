@@ -61,11 +61,16 @@ async def _maybe_similarity(reference: str, student: str) -> float | None:
         return None
     try:
         svc = deps.get_embedding_service()
-        ref_emb = await svc.embed(reference, model=settings.models.model_embedding)
-        stu_emb = await svc.embed(student, model=settings.models.model_embedding)
+        emb_model = settings.models.model_embedding
+        logger.info("Computing similarity via {}", emb_model)
+        ref_emb = await svc.embed(reference, model=emb_model)
+        stu_emb = await svc.embed(student, model=emb_model)
         if ref_emb is None or stu_emb is None:
+            logger.info("Similarity skipped (embedder unavailable)")
             return None
-        return round(EmbeddingService.cosine_similarity(ref_emb, stu_emb), 4)
+        sim = round(EmbeddingService.cosine_similarity(ref_emb, stu_emb), 4)
+        logger.info("Similarity = {}", sim)
+        return sim
     except Exception as exc:  # noqa: BLE001
         logger.warning("similarity post-process failed: {}", exc)
         return None
