@@ -1,10 +1,19 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
 class RecommendationsRequest(BaseModel):
-    task_text: str = Field(..., description="Текст задания")
-    student_answer: str = Field(..., description="Ответ студента")
-    reference_answer: str | None = Field(None, description="Эталонный ответ (опционально)")
-    focus: str | None = Field(None, description="На что особо обратить внимание")
+    task_description: str = Field(
+        ..., min_length=1,
+        description="Формулировка учебного задания открытого типа",
+    )
+    max_recommendations: int = Field(
+        5, ge=1, le=10,
+        description="Сколько альтернативных правильных ответов сгенерировать",
+    )
+    discipline: Optional[str] = Field(
+        None, description="Дисциплина (используется в системной роли промпта)",
+    )

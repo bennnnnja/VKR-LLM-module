@@ -135,10 +135,10 @@ def fake_llm(monkeypatch):
     monkeypatch.setattr("app.deps.get_ollama_client", lambda: fake_ollama)
     monkeypatch.setattr("app.deps.get_embedding_service", lambda: fake_embed)
 
-    # Также убираем искусственные sleeps в evaluate-stub-ветке
+    # Также убираем искусственные sleeps в stub-ветке общего пайплайна
     async def _no_async_sleep(_):
         return None
-    monkeypatch.setattr("app.workers.evaluate_task.asyncio.sleep", _no_async_sleep)
+    monkeypatch.setattr("app.workers._llm_runner.asyncio.sleep", _no_async_sleep)
 
     class Holder:
         ollama = fake_ollama

@@ -1,15 +1,16 @@
-// <recommendations-list> — компонент-список рекомендаций.
-// Может работать в двух режимах:
-//   1. Декларативный: items=<json-строка> в атрибуте — отрисовать как есть
-//   2. Загрузка: job-id=<uuid> + api-key — забрать /jobs/{jobId} и взять result.items
+// <recommendations-list> — список альтернативных правильных ответов студента,
+// предложенных моделью преподавателю как кандидаты на принимаемые альтернативы.
 //
 // Атрибуты:
-//   items        (опциональный) JSON-массив объектов {title, detail, priority}
-//   job-id       (опциональный) uuid; если задан — компонент сам загрузит результат
-//   api-key      (опциональный) для load-режима
+//   items     (опциональный) JSON-массив {text, rationale, confidence}
+//   job-id    (опциональный) uuid; если задан — компонент сам загрузит
+//             /jobs/{id}.result.recommendations
+//   api-key   (опциональный) если не задан — берётся из localStorage
 //
 // Свойство:
 //   .items = [...]  — программная установка списка
+//
+// Сортировка: по confidence от высокой к низкой.
 
 class RecommendationsList extends HTMLElement {
     static get observedAttributes() { return ["items", "job-id"]; }
@@ -55,7 +56,12 @@ class RecommendationsList extends HTMLElement {
                 });
                 if (!r.ok) throw new Error("HTTP " + r.status);
                 const job = await r.json();
-                this._items = job?.result?.items ?? [];
+                // Берём из result.recommendations (новая схема) либо result.items
+                // (legacy, для обратной совместимости с другими ручками)
+                this._items =
+                    job?.result?.recommendations
+                    ?? job?.result?.items
+                    ?? [];
                 this._render();
             } catch (err) {
                 this._renderError(err.message);
@@ -66,7 +72,7 @@ class RecommendationsList extends HTMLElement {
     }
 
     _renderLoading() {
-        this.innerHTML = `<div style="color:var(--text-muted,#777);font-size:13px;">загрузка рекомендаций…</div>`;
+        this.innerHTML = `<div style="color:var(--text-muted,#777);font-size:13px;">загрузка вариантов…</div>`;
     }
 
     _renderError(msg) {
@@ -79,23 +85,33 @@ class RecommendationsList extends HTMLElement {
             return;
         }
         if (this._items.length === 0) {
-            this.innerHTML = `<div style="color:var(--text-muted,#777);font-size:13px;font-style:italic;">рекомендаций нет</div>`;
+            this.innerHTML = `<div style="color:var(--text-muted,#777);font-size:13px;font-style:italic;">вариантов нет</div>`;
             return;
         }
-        const items = [...this._items].sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
+        const items = [...this._items].sort(
+            (a, b) => (b.confidence ?? 0) - (a.confidence ?? 0)
+        );
         const ol = document.createElement("ol");
         for (const it of items) {
             const li = document.createElement("li");
-            const prio = document.createElement("span");
-            prio.className = "priority";
-            prio.textContent = "P" + (it.priority ?? "?");
-            const title = document.createElement("span");
-            title.className = "item-title";
-            title.textContent = it.title ?? "(без названия)";
-            const detail = document.createElement("div");
-            detail.className = "item-detail";
-            detail.textContent = it.detail ?? "";
-            li.append(prio, title, detail);
+
+            const conf = document.createElement("span");
+            conf.className = "confidence";
+            const pct = Math.round(((it.confidence ?? 0) * 100));
+            conf.textContent = pct + "%";
+
+            const text = document.createElement("div");
+            text.className = "item-text";
+            text.textContent = it.text ?? "(пусто)";
+
+            if (it.rationale) {
+                const rat = document.createElement("div");
+                rat.className = "item-rationale";
+                rat.textContent = it.rationale;
+                li.append(conf, text, rat);
+            } else {
+                li.append(conf, text);
+            }
             ol.appendChild(li);
         }
         this.innerHTML = "";

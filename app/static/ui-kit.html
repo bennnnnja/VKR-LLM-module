@@ -113,7 +113,8 @@
     <div class="uikit-story">
         <h2>&lt;recommendations-list&gt;</h2>
         <p class="description">
-            Список рекомендаций, отсортированных по приоритету. Принимает массив
+            Список альтернативных правильных ответов студента, отсортированных
+            по <code>confidence</code> (от высокой к низкой). Принимает массив
             через атрибут <code>items</code> (JSON) или сам грузит данные по
             <code>job-id</code>. Свойство <code>.items = [...]</code> работает программно.
         </p>
@@ -121,9 +122,9 @@
         <div class="preview">
             <strong style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">Декларативно через items=</strong>
             <recommendations-list id="demo-recs-static" items='[
-                {"title":"Доуточнить определение полиморфизма","detail":"В ответе нужно явно упомянуть динамическую диспетчеризацию.","priority":1},
-                {"title":"Привести конкретный пример","detail":"Например, переопределение method() в наследниках.","priority":2},
-                {"title":"Сравнить с перегрузкой","detail":"Полезно объяснить разницу между overloading и overriding.","priority":3}
+                {"text":"Полиморфизм — способность объектов разных типов реагировать на один и тот же вызов по-разному, обычно через переопределение методов.","rationale":"Прямое определение с упоминанием переопределения.","confidence":0.95},
+                {"text":"Это когда у нескольких классов есть метод с одинаковым именем, но реализация зависит от типа объекта во время выполнения.","rationale":"Подчёркивается динамическая диспетчеризация.","confidence":0.88},
+                {"text":"Возможность общего интерфейса работать с разными типами без знания их конкретного класса.","rationale":"Делает акцент на интерфейсной природе.","confidence":0.74}
             ]'></recommendations-list>
 
             <hr style="margin:14px 0;border:none;border-top:1px solid var(--border);">
@@ -138,8 +139,8 @@
             <strong>Атрибуты</strong>
             <table>
                 <tr><th>атрибут</th><th>тип</th><th>описание</th></tr>
-                <tr><td>items</td><td>JSON</td><td>массив <code>{title, detail, priority}</code></td></tr>
-                <tr><td>job-id</td><td>uuid</td><td>если задан — сам загрузит <code>/jobs/{id}.result.items</code></td></tr>
+                <tr><td>items</td><td>JSON</td><td>массив <code>{text, rationale, confidence}</code></td></tr>
+                <tr><td>job-id</td><td>uuid</td><td>если задан — сам загрузит <code>/jobs/{id}.result.recommendations</code></td></tr>
                 <tr><td>api-key</td><td>string</td><td>как и у остальных, по умолчанию из localStorage</td></tr>
             </table>
             <strong style="display:block;margin-top:10px;">Свойство</strong>
@@ -154,14 +155,16 @@
             <pre>&lt;script src="/static/components/recommendations-list.js"&gt;&lt;/script&gt;
 
 &lt;!-- 1. Декларативно --&gt;
-&lt;recommendations-list items='[{"title":"...","detail":"...","priority":1}]'&gt;&lt;/recommendations-list&gt;
+&lt;recommendations-list items='[{"text":"...","rationale":"...","confidence":0.9}]'&gt;&lt;/recommendations-list&gt;
 
 &lt;!-- 2. Из job-id --&gt;
 &lt;recommendations-list job-id="..." api-key="..."&gt;&lt;/recommendations-list&gt;
 
 &lt;!-- 3. Программно --&gt;
 &lt;script&gt;
-document.querySelector("recommendations-list").items = [{title:"...", detail:"...", priority:1}];
+document.querySelector("recommendations-list").items = [
+    {text:"...", rationale:"...", confidence:0.9},
+];
 &lt;/script&gt;</pre>
         </details>
     </div>
@@ -219,8 +222,9 @@ document.getElementById("demo-load-recs").addEventListener("click", async () => 
             method: "POST",
             headers: {"Content-Type": "application/json", "X-API-Key": apiKey()},
             body: JSON.stringify({
-                task_text: "Опишите принцип единственной ответственности.",
-                student_answer: "Это когда у класса одна задача.",
+                task_description: "Объясните принцип единственной ответственности (SRP) в ООП и поясните, чем нарушение SRP вредно.",
+                max_recommendations: 4,
+                discipline: "Программирование",
             }),
         });
         const data = await r.json();

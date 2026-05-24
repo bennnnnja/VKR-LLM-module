@@ -437,15 +437,26 @@ job-poller[data-status="failed"] .progress > .bar { background: var(--danger); w
 job-poller[data-status="cancelled"] .progress > .bar { background: var(--text-muted); width: 100% !important; }
 
 recommendations-list ol { padding-left: 20px; margin: 0; }
-recommendations-list li { margin-bottom: 8px; }
-recommendations-list .priority {
+recommendations-list li { margin-bottom: 12px; }
+recommendations-list .confidence {
     display: inline-block;
-    background: var(--tag-stub-bg);
-    color: var(--tag-stub-fg);
+    background: var(--tag-direct-bg);
+    color: var(--tag-direct-fg);
     border-radius: 4px;
     padding: 1px 6px;
     font-size: 11px;
     margin-right: 6px;
+    font-weight: 600;
+    min-width: 36px;
+    text-align: center;
 }
-recommendations-list .item-title { font-weight: 500; }
-recommendations-list .item-detail { color: var(--text-muted); font-size: 13px; }
+recommendations-list .item-text { font-weight: 500; display: inline; }
+recommendations-list .item-rationale {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+    margin-top: 2px;
+    padding-left: 4px;
+    border-left: 2px solid var(--border);
+    padding-left: 10px;
+}

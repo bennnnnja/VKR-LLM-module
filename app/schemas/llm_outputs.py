@@ -30,15 +30,16 @@ class EvaluateLLMOutput(BaseModel):
         return v
 
 
-class RecommendationItem(BaseModel):
-    title: str
-    detail: str
-    priority: int = Field(1, ge=1, le=5)
+class AlternativeAnswer(BaseModel):
+    """Один правдоподобный корректный ответ студента, предлагаемый
+    преподавателю как кандидат на принимаемую альтернативу эталона."""
+    text: str = Field(..., min_length=1)
+    rationale: str = Field("", description="Почему этот вариант корректен")
+    confidence: float = Field(..., ge=0.0, le=1.0)
 
 
 class RecommendationsLLMOutput(BaseModel):
-    items: list[RecommendationItem]
-    summary: str = ""
+    recommendations: list[AlternativeAnswer] = Field(..., min_length=1)
 
 
 class TestCase(BaseModel):

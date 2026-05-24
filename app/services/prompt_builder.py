@@ -42,8 +42,26 @@ class PromptBuilder:
             rubric_block=rubric_block,
         )
 
-    def build_evaluate_retry(self, original_prompt: str, bad_response: str, error: str) -> str:
-        """Промпт для retry после неудачной валидации JSON-схемы."""
+    def build_recommendations(
+        self,
+        task_description: str,
+        n: int,
+        discipline: Optional[str] = None,
+    ) -> str:
+        template = _load("recommendations.txt")
+        discipline_suffix = (
+            f' по дисциплине "{discipline.strip()}"'
+            if discipline and discipline.strip()
+            else ""
+        )
+        return template.format(
+            discipline_suffix=discipline_suffix,
+            task_description=task_description.strip(),
+            n=int(n),
+        )
+
+    def build_retry(self, original_prompt: str, bad_response: str, error: str) -> str:
+        """Универсальный retry-промпт для любой задачи."""
         return (
             f"{original_prompt}\n\n"
             f"--- ПОВТОРНАЯ ПОПЫТКА ---\n"
@@ -54,3 +72,7 @@ class PromptBuilder:
             f"ровно один валидный JSON-объект без markdown, без текста "
             f"до/после, без комментариев. Только JSON."
         )
+
+    def build_evaluate_retry(self, original_prompt: str, bad_response: str, error: str) -> str:
+        # Alias для совместимости с фазой 3 — единая логика retry.
+        return self.build_retry(original_prompt, bad_response, error)

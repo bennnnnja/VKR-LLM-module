@@ -91,16 +91,22 @@
             <span class="method">application/json</span>
         </h2>
         <p class="meta">
-            Текстовые рекомендации студенту.
+            N правдоподобных альтернативных правильных ответов студента — преподаватель выберет, какие добавить как принимаемые альтернативы эталона.
             target_model: <strong data-target="recommendations">…</strong>
             · resolution preview: <span class="resolution-tag" data-preview="recommendations">…</span>
         </p>
         <div class="grid">
             <div>
+                <div class="slider-row" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <label for="rec-slider" style="margin:0;">max_recommendations</label>
+                    <input type="range" id="rec-slider" data-rec-slider min="1" max="10" value="5" style="flex:1;"/>
+                    <span data-rec-slider-value style="font-family:ui-monospace,Consolas,monospace;font-weight:600;min-width:24px;text-align:right;">5</span>
+                </div>
                 <label>Тело запроса</label>
                 <textarea data-input>{
-  "task_text": "Опишите принцип работы хеш-таблицы.",
-  "student_answer": "Хеш-таблица — это структура где данные хранятся по ключу. Ключ хешируется и по этому хешу находится место в массиве."
+  "task_description": "Объясните, что такое полиморфизм в ООП, и приведите короткий пример.",
+  "max_recommendations": 5,
+  "discipline": "Программирование"
 }</textarea>
                 <div class="actions">
                     <button class="primary" data-send>Отправить</button>
@@ -470,6 +476,31 @@ document.querySelectorAll(".section").forEach(section => {
         });
     }
 });
+
+// ─────────── max_recommendations slider sync ───────────
+// Слайдер показывает значение и пишет его в JSON в textarea секции recommendations.
+// Если пользователь правит JSON руками — слайдер просто отображает последнее
+// «своё» значение, ничего не ломая.
+(function wireRecommendationsSlider() {
+    const section = document.querySelector('[data-section="recommendations"]');
+    if (!section) return;
+    const slider = section.querySelector("[data-rec-slider]");
+    const valueLabel = section.querySelector("[data-rec-slider-value]");
+    const textarea = section.querySelector("[data-input]");
+    if (!slider || !textarea) return;
+
+    slider.addEventListener("input", () => {
+        const n = parseInt(slider.value, 10);
+        valueLabel.textContent = n;
+        try {
+            const body = JSON.parse(textarea.value);
+            body.max_recommendations = n;
+            textarea.value = JSON.stringify(body, null, 2);
+        } catch {
+            // JSON битый — не трогаем, пользователь сам поправит
+        }
+    });
+})();
 
 loadConfig();
 </script>
