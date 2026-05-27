@@ -20,8 +20,11 @@ class JobType(str, Enum):
     evaluate = "evaluate"
     recommendations = "recommendations"
     testcases = "testcases"
+    # discipline теперь только синхронный — без Celery, без Job, без JobType.
+    # Значение оставлено как deprecated, чтобы не сломать чтение старых Job
+    # из Redis, которые могли быть созданы до фазы 7. После истечения их TTL
+    # (24 часа) значение можно безопасно удалить.
     discipline_test = "discipline_test"
-    discipline_task = "discipline_task"
 
 
 ModelResolution = Literal["direct", "fallback", "stub", "fail"]

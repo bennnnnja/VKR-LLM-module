@@ -155,7 +155,8 @@ GPU-сервер Ollama в ДВФУ используется другими ко
 | `app/services/prompt_builder.py` | Сборка промптов из `app/prompts/*.txt` |
 | `app/workers/_llm_runner.py` | Общий async-каркас для всех LLM-задач: cancel-чек, ModelRouter, stub/fail/direct/fallback, retry, postprocess |
 | `app/workers/_async_bridge.py` | sync→async-мост для Celery-таска: обычный `asyncio.run` или fresh thread, если loop уже работает (тесты) |
-| `app/workers/{evaluate,recommendations,testcases,discipline_test}_task.py` | Тонкие фасады над `_llm_runner`: подсовывают prompt-builder, output-схему и (для evaluate) postprocess |
+| `app/workers/{evaluate,recommendations,testcases}_task.py` | Тонкие фасады над `_llm_runner`: подсовывают prompt-builder, output-схему и (для evaluate) postprocess |
+| `app/api/routes_analyze.py::post_task_discipline` | Синхронный эндпоинт классификации дисциплины — без Celery/Job, с отдельным `SYNC_LLM_TIMEOUT_SECONDS=30` |
 | `app/middleware/auth.py` | Проверка `X-API-Key`, публичный allowlist для `/health`, `/config`, `/sandbox`, `/ui-kit`, `/static`, `/docs` |
 | `app/static/sandbox.html` | UI-витрина с пятью секциями + автополлинг + просмотр `llm_log` |
 | `app/static/components/*.js` | Ванильные Web Components (job-poller, evaluate-form, recommendations-list) |

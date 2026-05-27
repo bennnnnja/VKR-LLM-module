@@ -5,21 +5,12 @@ import json
 import pytest
 
 from app.services.llm_client import LLMTimeout, LLMUnavailable
-from app.workers.celery_app import celery_app
-
-
-@pytest.fixture(autouse=True)
-def celery_eager():
-    celery_app.conf.task_always_eager = True
-    celery_app.conf.task_eager_propagates = True
-    yield
-    celery_app.conf.task_always_eager = False
 
 
 @pytest.fixture(autouse=True)
 def add_discipline_model_to_available(monkeypatch):
-    """Включаем qwen3:8b в available_models, чтобы classifier-задача и
-    sync-эндпоинт уходили в direct, а не в stub."""
+    """Включаем qwen3:8b в available_models, чтобы sync-эндпоинт
+    уходил в direct, а не в stub."""
     monkeypatch.setenv("AVAILABLE_MODELS", "qwen2.5:32b-instruct,qwen3-coder-next,qwen3:8b,qwen3-embedding:8b")
     from app.config import ModelConfig
     monkeypatch.setattr(
@@ -31,99 +22,6 @@ def add_discipline_model_to_available(monkeypatch):
         "app.api.routes_analyze.settings.models",
         ModelConfig(),
     )
-
-
-# ───────────── async (/analyze/test-discipline) ─────────────
-
-def _post_async(client, api_key, text="Что такое нормализация баз данных?"):
-    r = client.post(
-        "/analyze/test-discipline",
-        headers={"X-API-Key": api_key},
-        json={"test_text": text},
-    )
-    assert r.status_code == 202, r.text
-    return r.json()["jobId"]
-
-
-def _get(client, api_key, job_id):
-    r = client.get(f"/jobs/{job_id}", headers={"X-API-Key": api_key})
-    assert r.status_code == 200
-    return r.json()
-
-
-def test_async_direct_success(client, api_key, fake_llm):
-    fake_llm.ollama.push_response(json.dumps({
-        "discipline": "Программирование", "confidence": 0.88,
-    }))
-    job_id = _post_async(client, api_key, "Алгоритм быстрой сортировки и его сложность")
-    job = _get(client, api_key, job_id)
-    assert job["status"] == "completed"
-    assert job["llm_log"]["target_model"] == "qwen3:8b"
-    assert job["llm_log"]["model_resolution"] == "direct"
-    assert job["result"]["discipline"] == "Программирование"
-    assert job["result"]["confidence"] == pytest.approx(0.88)
-
-
-def test_async_invalid_discipline_triggers_retry(client, api_key, fake_llm):
-    """LLM вернула 'Информатика' (не из closed-set) → retry → второй
-    раз 'Программирование'."""
-    fake_llm.ollama.push_response(json.dumps({
-        "discipline": "Информатика", "confidence": 0.9,
-    }))
-    fake_llm.ollama.push_response(json.dumps({
-        "discipline": "Программирование", "confidence": 0.85,
-    }))
-    job_id = _post_async(client, api_key)
-    job = _get(client, api_key, job_id)
-    assert job["status"] == "completed"
-    assert job["llm_log"]["retries"] == 1
-    assert job["result"]["discipline"] == "Программирование"
-
-
-def test_async_retry_exhausted_failed(client, api_key, fake_llm):
-    """Оба раза не из списка → failed/llm_invalid_output."""
-    fake_llm.ollama.push_response(json.dumps({"discipline": "Информатика", "confidence": 0.9}))
-    fake_llm.ollama.push_response(json.dumps({"discipline": "Алгебра",      "confidence": 0.9}))
-    job_id = _post_async(client, api_key)
-    job = _get(client, api_key, job_id)
-    assert job["status"] == "failed"
-    assert job["error"]["code"] == "llm_invalid_output"
-
-
-def test_async_confidence_out_of_range(client, api_key, fake_llm):
-    fake_llm.ollama.push_response(json.dumps({"discipline": "Физика", "confidence": 1.5}))
-    fake_llm.ollama.push_response(json.dumps({"discipline": "Физика", "confidence": 0.9}))
-    job_id = _post_async(client, api_key)
-    job = _get(client, api_key, job_id)
-    assert job["status"] == "completed"
-    assert job["llm_log"]["retries"] == 1
-
-
-def test_async_unavailable_returns_failed(client, api_key, fake_llm):
-    fake_llm.ollama.push_error(LLMUnavailable("down"))
-    job_id = _post_async(client, api_key)
-    job = _get(client, api_key, job_id)
-    assert job["status"] == "failed"
-    assert job["error"]["code"] == "llm_unavailable"
-
-
-def test_async_timeout_returns_failed(client, api_key, fake_llm):
-    fake_llm.ollama.push_error(LLMTimeout("timeout"))
-    job_id = _post_async(client, api_key)
-    job = _get(client, api_key, job_id)
-    assert job["status"] == "failed"
-    assert job["error"]["code"] == "llm_timeout"
-
-
-def test_all_discipline_values_accepted(client, api_key, fake_llm):
-    """Все 8 значений closed-set должны проходить валидацию."""
-    from app.schemas.discipline import DISCIPLINES
-    for d in DISCIPLINES:
-        fake_llm.ollama.push_response(json.dumps({"discipline": d, "confidence": 0.7}))
-        job_id = _post_async(client, api_key)
-        job = _get(client, api_key, job_id)
-        assert job["status"] == "completed", f"{d} should be accepted"
-        assert job["result"]["discipline"] == d
 
 
 # ───────────── sync (/analyze/task-discipline) ─────────────
@@ -179,13 +77,7 @@ def test_sync_timeout_returns_504(client, api_key, fake_llm):
 
 
 def test_sync_master_margarita_classified_as_literature(client, api_key, fake_llm):
-    """Прямая проверка по жалобе пользователя: 'Мастер и Маргарита' → Литература.
-
-    Тест проверяет, что:
-      1) sync-эндпоинт реально дёргает LLM (а не возвращает hardcoded
-         'Программирование' с 0.75, как в фазе 1).
-      2) Если LLM возвращает 'Литература' — мы её отдаём.
-    """
+    """'Мастер и Маргарита' → Литература. Прямой repro пользовательского бага."""
     fake_llm.ollama.push_response(json.dumps({
         "discipline": "Литература", "confidence": 0.95,
     }))
@@ -200,7 +92,6 @@ def test_sync_master_margarita_classified_as_literature(client, api_key, fake_ll
 def test_sync_passes_timeout_override(client, api_key, fake_llm):
     """Sync-эндпоинт должен вызывать generate(..., timeout=30) — отдельный
     таймаут SYNC_LLM_TIMEOUT_SECONDS, не общий 120с."""
-    # Подкручиваем fake чтобы он сохранял kwargs
     orig_generate = fake_llm.ollama.generate
     captured = {}
 
@@ -223,6 +114,31 @@ def test_sync_validation_empty_body(client, api_key):
         json={},
     )
     assert r.status_code == 422
+
+
+def test_sync_all_disciplines_accepted(client, api_key, fake_llm):
+    """Все 8 значений closed-set проходят валидацию через sync."""
+    from app.schemas.discipline import DISCIPLINES
+    for d in DISCIPLINES:
+        fake_llm.ollama.push_response(json.dumps({"discipline": d, "confidence": 0.7}))
+        r = _post_sync(client, api_key, f"Текст про {d}")
+        assert r.status_code == 200, f"{d} should be accepted"
+        assert r.json()["discipline"] == d
+
+
+def test_sync_stub_when_model_unavailable(client, api_key, monkeypatch):
+    """Если qwen3:8b не в AVAILABLE_MODELS — sync отдаёт 'Прочее'/0.0
+    без вызова LLM (а не выдумывает Программирование/0.75 как в phase 1)."""
+    monkeypatch.setenv("AVAILABLE_MODELS", "qwen2.5:32b-instruct")
+    from app.config import ModelConfig
+    monkeypatch.setattr("app.services.model_router.settings.models", ModelConfig())
+    monkeypatch.setattr("app.api.routes_analyze.settings.models", ModelConfig())
+
+    r = _post_sync(client, api_key, "Что угодно")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["discipline"] == "Прочее"
+    assert body["confidence"] == 0.0
 
 
 # ───────────── /config резолюция discipline после расширения available_models ─────────────

@@ -190,48 +190,7 @@
         </div>
     </section>
 
-    <!-- ─────────── 4. analyze/test-discipline ─────────── -->
-    <section class="section" data-section="discipline_test">
-        <h2>
-            POST /analyze/test-discipline
-            <span class="badge-async">async</span>
-            <span class="method">application/json</span>
-        </h2>
-        <p class="meta">
-            Классификация дисциплины по полному тексту теста.
-            target_model: <strong data-target="discipline">…</strong>
-            · resolution preview: <span class="resolution-tag" data-preview="discipline">…</span>
-        </p>
-        <div class="grid">
-            <div>
-                <label>Тело запроса</label>
-                <textarea data-input>{
-  "test_text": "Что такое нормализация баз данных? Назовите три нормальные формы и приведите пример приведения отношения к 3НФ."
-}</textarea>
-                <div class="actions">
-                    <button class="primary" data-send>Отправить</button>
-                    <button class="danger" data-cancel disabled>Отменить</button>
-                    <button class="ghost" data-clear>Очистить вывод</button>
-                </div>
-            </div>
-            <div>
-                <div class="kv-row"><span class="k">jobId</span><span class="v" data-job-id>—</span></div>
-                <div class="kv-row"><span class="k">status</span><span class="v"><span class="status-tag" data-status>—</span></span></div>
-                <div class="output-panel"><h4>result</h4><pre class="json" data-result>—</pre></div>
-                <div class="llm-log">
-                    <h4>llm_log</h4>
-                    <div class="kv-row"><span class="k">target_model</span><span class="v" data-llm-target>—</span></div>
-                    <div class="kv-row"><span class="k">actual_model</span><span class="v" data-llm-actual>—</span></div>
-                    <div class="kv-row"><span class="k">resolution</span><span class="v"><span class="resolution-tag" data-llm-resolution>—</span></span></div>
-                    <div class="kv-row"><span class="k">duration_ms</span><span class="v" data-llm-duration>—</span></div>
-                    <div class="kv-row"><span class="k">retries</span><span class="v" data-llm-retries>—</span></div>
-                    <details class="snippet"><summary>raw_response</summary><pre data-llm-raw>—</pre></details>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ─────────── 5. analyze/task-discipline (SYNC) ─────────── -->
+    <!-- ─────────── 4. analyze/task-discipline (SYNC) ─────────── -->
     <section class="section" data-section="discipline_task" data-sync="true">
         <h2>
             POST /analyze/task-discipline
@@ -330,7 +289,6 @@ const ENDPOINTS = {
     evaluate:         { url: "/evaluate/task",            sync: false },
     recommendations:  { url: "/generate/recommendations", sync: false },
     testcases:        { url: "/generate/testcases",       sync: false },
-    discipline_test:  { url: "/analyze/test-discipline",  sync: false },
     discipline_task:  { url: "/analyze/task-discipline",  sync: true  },
 };
 

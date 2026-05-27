@@ -1,42 +1,22 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from loguru import logger
 from pydantic import ValidationError
 
 from app import deps
 from app.config import settings
-from app.deps import get_job_store
 from app.schemas.discipline import (
     DISCIPLINES,
     DisciplineResponse,
     DisciplineTaskRequest,
-    DisciplineTestRequest,
 )
-from app.schemas.job import Job, JobAcceptedResponse, JobType
 from app.schemas.llm_outputs import DisciplineLLMOutput
-from app.services.job_store import JobStoreAsync
 from app.services.llm_client import LLMTimeout, LLMUnavailable
 from app.services.model_router import ModelRouter
 from app.services.prompt_builder import PromptBuilder
-from app.workers.discipline_test_task import discipline_test_task
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
-
-
-@router.post(
-    "/test-discipline",
-    status_code=status.HTTP_202_ACCEPTED,
-    response_model=JobAcceptedResponse,
-)
-async def post_test_discipline(
-    payload: DisciplineTestRequest,
-    store: JobStoreAsync = Depends(get_job_store),
-) -> JobAcceptedResponse:
-    job = Job(job_type=JobType.discipline_test, input_data=payload.model_dump())
-    await store.create(job)
-    discipline_test_task.delay(job.job_id)
-    return JobAcceptedResponse(jobId=job.job_id)
 
 
 @router.post(
@@ -45,18 +25,17 @@ async def post_test_discipline(
     response_model=DisciplineResponse,
 )
 async def post_task_discipline(payload: DisciplineTaskRequest) -> DisciplineResponse:
-    """Синхронный эндпоинт — без Celery, без JobStore.
+    """Синхронный эндпоинт классификации дисциплины — без Celery, без JobStore.
 
     Жёсткий таймаут SYNC_LLM_TIMEOUT_SECONDS (default 30s) — клиент держит
     HTTP-соединение открытым всё время вызова LLM, поэтому ограничение
     строже общего LLM_TIMEOUT_SECONDS.
 
     При недоступности модели или невалидном ответе после retry — HTTP-ошибки
-    (502 / 504 / 422), а не Job со статусом failed (нет JobStore).
+    (502 / 504 / 503), а не Job со статусом failed (нет JobStore).
     """
     target_model = settings.models.model_discipline
-    router_ = ModelRouter()
-    actual_model, mode = router_.resolve(target_model)
+    actual_model, mode = ModelRouter().resolve(target_model)
 
     logger.info("[sync task-discipline] Target model: {}, resolution: {}", target_model, mode)
 

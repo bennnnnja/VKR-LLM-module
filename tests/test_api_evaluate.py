@@ -59,16 +59,12 @@ def test_recommendations_rejects_old_shape(client, api_key):
     assert r.status_code == 422
 
 
-def test_discipline_test_stub(client, api_key):
+def test_test_discipline_endpoint_removed(client, api_key):
+    """Async /analyze/test-discipline удалён в фазе 7 как избыточный
+    (дублировал sync-вариант). FastAPI должен вернуть 404."""
     r = client.post(
         "/analyze/test-discipline",
         headers={"X-API-Key": api_key},
-        json={"test_text": "Задача про связные списки и хеш-таблицы"},
+        json={"test_text": "что угодно"},
     )
-    assert r.status_code == 202
-    job_id = r.json()["jobId"]
-    body = client.get(f"/jobs/{job_id}", headers={"X-API-Key": api_key}).json()
-    # qwen3:8b недоступна, strategy=stub
-    assert body["status"] == "completed"
-    assert body["llm_log"]["target_model"] == "qwen3:8b"
-    assert body["llm_log"]["model_resolution"] == "stub"
+    assert r.status_code == 404

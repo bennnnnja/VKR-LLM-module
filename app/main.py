@@ -13,6 +13,7 @@ from app.api.routes_jobs import router as jobs_router
 from app.config import settings
 from app.logging_config import setup as setup_logging
 from app.middleware.auth import APIKeyMiddleware
+from app.middleware.cache import NoStoreCacheMiddleware
 from app.middleware.logging import RequestLoggingMiddleware
 from app.services.model_router import ModelRouter
 
@@ -22,6 +23,8 @@ app = FastAPI(title="LLM Grading Service", version="0.1.0")
 
 # Middleware: auth должен сработать ВНУТРИ цикла логирования,
 # то есть логирование добавляется ПОСЛЕДНИМ (выполняется первым на запросе).
+# Cache-Control ставится после auth, чтобы header применился даже к 401.
+app.add_middleware(NoStoreCacheMiddleware)
 app.add_middleware(APIKeyMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 

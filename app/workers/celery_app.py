@@ -15,7 +15,6 @@ celery_app = Celery(
         "app.workers.evaluate_task",
         "app.workers.recommendations_task",
         "app.workers.testcases_task",
-        "app.workers.discipline_test_task",
     ],
 )
 

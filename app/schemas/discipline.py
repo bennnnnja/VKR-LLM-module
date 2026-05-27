@@ -30,10 +30,6 @@ DisciplineName = Literal[
 ]
 
 
-class DisciplineTestRequest(BaseModel):
-    test_text: str = Field(..., min_length=1, description="Текст теста для классификации дисциплины")
-
-
 class DisciplineTaskRequest(BaseModel):
     task_text: str = Field(..., min_length=1, description="Текст одного задания для классификации")
 

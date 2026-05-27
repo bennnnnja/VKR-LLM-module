@@ -55,7 +55,6 @@ docker compose up --build
 | POST  | `/evaluate/task`              | async | qwen2.5:32b-instruct |
 | POST  | `/generate/recommendations`   | async | qwen2.5:32b-instruct |
 | POST  | `/generate/testcases`         | async | qwen3-coder-next |
-| POST  | `/analyze/test-discipline`    | async | qwen3:8b |
 | POST  | `/analyze/task-discipline`    | sync  | qwen3:8b |
 | GET   | `/jobs/{jobId}`               | sync  | — |
 | POST  | `/jobs/{jobId}/cancel`        | sync  | — |

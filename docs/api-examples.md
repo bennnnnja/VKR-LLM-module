@@ -154,41 +154,16 @@ curl -X POST $API/generate/testcases \
 
 ---
 
-## 4. `POST /analyze/test-discipline` — классификация дисциплины (async)
-
-Модель: `qwen3:8b`. Сейчас — stub (модель недоступна).
-
-### Запрос
-
-```bash
-curl -X POST $API/analyze/test-discipline \
-  -H "X-API-Key: $KEY" -H "Content-Type: application/json" \
-  -d '{"test_text":"Что такое нормализация баз данных? Назовите три нормальные формы..."}'
-```
-
-### Ответ (stub)
-
-```json
-{
-  "status": "completed",
-  "result": {
-    "discipline": "unknown",
-    "confidence": 0.0,
-    "note": "STUB: qwen3:8b недоступна, дисциплина не определена."
-  },
-  "llm_log": {
-    "target_model": "qwen3:8b",
-    "model_resolution": "stub"
-  }
-}
-```
-
----
-
-## 5. `POST /analyze/task-discipline` — классификация (sync)
+## 4. `POST /analyze/task-discipline` — классификация дисциплины (sync)
 
 Единственный синхронный эндпоинт. Без Celery, без `jobId` —
 возвращает результат сразу.
+
+Модель — `qwen3:8b`, отдельный таймаут `SYNC_LLM_TIMEOUT_SECONDS=30`
+(вместо общих 120 — клиент держит HTTP-соединение открытым всё время
+вызова). `discipline` всегда из закрытого списка:
+`Программирование | Математика | Русский язык | Литература |
+Биология | География | Физика | Прочее`.
 
 ### Запрос
 
@@ -201,8 +176,18 @@ curl -X POST $API/analyze/task-discipline \
 ### Ответ
 
 ```json
-{"discipline": "Программирование", "confidence": 0.75}
+{"discipline": "Программирование", "confidence": 0.88}
 ```
+
+### Коды ошибок (HTTP)
+
+| Код | Когда |
+|---|---|
+| 200 | Успех |
+| 422 | Тело запроса не прошло Pydantic-валидацию |
+| 502 | `llm_unavailable` (Ollama не отвечает) или `llm_invalid_output` (LLM дважды вернула невалидный JSON) |
+| 503 | `model_unavailable` (при `FALLBACK_STRATEGY=fail`) |
+| 504 | `llm_timeout` (вышли за 30 сек) |
 
 ---
 
