@@ -92,8 +92,14 @@ class OllamaClient:
         model: str,
         format: str | None = "json",
         options: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> tuple[str, GenerateMeta]:
-        """Вызов /api/generate. Возвращает (raw_text, metadata)."""
+        """Вызов /api/generate. Возвращает (raw_text, metadata).
+
+        timeout: если задан — переопределяет таймаут httpx-клиента на
+        конкретный вызов. Нужен для синхронного /analyze/task-discipline,
+        который хочет более жёсткий лимит (30с вместо общих 120с).
+        """
         client, sem = self._get_loop_state()
         url = f"{self._base_url}/api/generate"
         body: dict[str, Any] = {"model": model, "prompt": prompt, "stream": False}
@@ -101,6 +107,8 @@ class OllamaClient:
             body["format"] = format
         if options:
             body["options"] = options
+
+        effective_timeout = timeout if timeout is not None else self._timeout
 
         logger.info(
             "Calling Ollama (model={}, prompt={}b, in-flight={}/{})",
@@ -115,10 +123,10 @@ class OllamaClient:
             start = time.monotonic()
             try:
                 try:
-                    response = await client.post(url, json=body)
+                    response = await client.post(url, json=body, timeout=effective_timeout)
                 except httpx.TimeoutException as exc:
                     raise LLMTimeout(
-                        f"Ollama timeout after {self._timeout}s on model {model!r}"
+                        f"Ollama timeout after {effective_timeout}s on model {model!r}"
                     ) from exc
                 except (
                     httpx.ConnectError,

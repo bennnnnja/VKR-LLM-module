@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+from app.schemas.discipline import DisciplineName
 
 
 class CriterionScore(BaseModel):
@@ -42,17 +44,33 @@ class RecommendationsLLMOutput(BaseModel):
     recommendations: list[AlternativeAnswer] = Field(..., min_length=1)
 
 
+# ───────────────────────── testcases ─────────────────────────
+
+TestCaseType = Literal["basic", "edge", "negative"]
+
+
 class TestCase(BaseModel):
-    name: str
-    input: str
-    expected_output: str
-    is_edge_case: bool = False
+    """Один тест-кейс (чёрный ящик: пара вход/ожидаемый-результат)."""
+    ordinal_number: int = Field(..., ge=1, description="Порядковый номер кейса 1..N")
+    description: str = Field(..., min_length=1, description="Словесное описание сценария")
+    input: str = Field("", description="Входные данные как строка")
+    expected_output: str = Field(
+        "",
+        description=(
+            "Ожидаемый вывод. Для type=negative — описание ожидаемого поведения "
+            "(например 'raises ValueError' или 'возвращает None')"
+        ),
+    )
+    type: TestCaseType
 
 
 class TestcasesLLMOutput(BaseModel):
-    cases: list[TestCase]
+    cases: list[TestCase] = Field(..., min_length=1)
 
+
+# ───────────────────────── discipline ─────────────────────────
 
 class DisciplineLLMOutput(BaseModel):
-    discipline: str
+    """Закрытый набор дисциплин — DisciplineName из app.schemas.discipline."""
+    discipline: DisciplineName
     confidence: float = Field(..., ge=0.0, le=1.0)

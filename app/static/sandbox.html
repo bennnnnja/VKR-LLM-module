@@ -145,12 +145,27 @@
         </p>
         <div class="grid">
             <div>
+                <div class="slider-row" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <label for="tc-slider" style="margin:0;">count</label>
+                    <input type="range" id="tc-slider" data-tc-slider min="1" max="50" value="10" style="flex:1;"/>
+                    <span data-tc-slider-value style="font-family:ui-monospace,Consolas,monospace;font-weight:600;min-width:24px;text-align:right;">10</span>
+                </div>
+                <div style="display:flex;gap:16px;margin-bottom:10px;font-size:12px;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;color:var(--text);">
+                        <input type="checkbox" data-tc-edge checked /> include_edge_cases
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;color:var(--text);">
+                        <input type="checkbox" data-tc-negative /> include_negative_cases
+                    </label>
+                </div>
                 <label>Тело запроса</label>
                 <textarea data-input>{
-  "task_text": "Написать функцию add(a: int, b: int) -> int, возвращающую сумму двух целых чисел.",
+  "task_description": "Написать функцию add(a: int, b: int) -> int, возвращающую сумму двух целых чисел.",
+  "function_signature": "def add(a: int, b: int) -> int",
   "language": "python",
-  "count": 5,
-  "include_edge_cases": true
+  "count": 10,
+  "include_edge_cases": true,
+  "include_negative_cases": false
 }</textarea>
                 <div class="actions">
                     <button class="primary" data-send>Отправить</button>
@@ -232,8 +247,11 @@
             <div>
                 <label>Тело запроса</label>
                 <textarea data-input>{
-  "task_text": "Реализовать сортировку слиянием для массива целых чисел."
+  "task_text": "Пересказать смысл книги Мастер и Маргарита."
 }</textarea>
+                <p class="empty-hint" style="margin-top:6px;">
+                    Допустимые дисциплины (closed-set): Программирование, Математика, Русский язык, Литература, Биология, География, Физика, Прочее.
+                </p>
                 <div class="actions">
                     <button class="primary" data-send>Отправить</button>
                     <button class="ghost" data-clear>Очистить вывод</button>
@@ -500,6 +518,47 @@ document.querySelectorAll(".section").forEach(section => {
             // JSON битый — не трогаем, пользователь сам поправит
         }
     });
+})();
+
+// ─────────── testcases slider + checkboxes sync ───────────
+(function wireTestcasesControls() {
+    const section = document.querySelector('[data-section="testcases"]');
+    if (!section) return;
+    const textarea = section.querySelector("[data-input]");
+    if (!textarea) return;
+
+    const slider = section.querySelector("[data-tc-slider]");
+    const valueLabel = section.querySelector("[data-tc-slider-value]");
+    const cbEdge = section.querySelector("[data-tc-edge]");
+    const cbNeg = section.querySelector("[data-tc-negative]");
+
+    const writeJson = (mut) => {
+        try {
+            const body = JSON.parse(textarea.value);
+            mut(body);
+            textarea.value = JSON.stringify(body, null, 2);
+        } catch {
+            // JSON битый — не трогаем
+        }
+    };
+
+    if (slider) {
+        slider.addEventListener("input", () => {
+            const n = parseInt(slider.value, 10);
+            valueLabel.textContent = n;
+            writeJson(b => { b.count = n; });
+        });
+    }
+    if (cbEdge) {
+        cbEdge.addEventListener("change", () => {
+            writeJson(b => { b.include_edge_cases = cbEdge.checked; });
+        });
+    }
+    if (cbNeg) {
+        cbNeg.addEventListener("change", () => {
+            writeJson(b => { b.include_negative_cases = cbNeg.checked; });
+        });
+    }
 })();
 
 loadConfig();

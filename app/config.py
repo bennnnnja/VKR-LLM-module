@@ -10,6 +10,10 @@ class OllamaConfig(BaseSettings):
 
     ollama_base_url: str = "http://ollama.example.dvfu.local:11434"
     llm_timeout_seconds: int = 120
+    # Жёсткий таймаут для синхронного эндпоинта /analyze/task-discipline:
+    # клиент держит HTTP-соединение открытым всё время вызова LLM,
+    # поэтому ограничение строже общего.
+    sync_llm_timeout_seconds: int = 30
     llm_max_concurrent: int = 2
 
 

@@ -67,7 +67,7 @@ def test_testcases_stub_resolution(client, api_key):
     r = client.post(
         "/generate/testcases",
         headers={"X-API-Key": api_key},
-        json={"task_text": "Сложить два числа", "language": "python", "count": 3},
+        json={"task_description": "Сложить два числа", "language": "python", "count": 3},
     )
     assert r.status_code == 202
     job_id = r.json()["jobId"]
@@ -101,14 +101,10 @@ def test_cancel_completed_returns_409(client, api_key):
     assert r.json()["detail"]["code"] == "job_not_cancellable"
 
 
-def test_analyze_task_discipline_sync(client, api_key, monkeypatch):
-    # Этот эндпоинт синхронный, без Celery — проверяем прямой ответ.
-    import app.api.routes_analyze as analyze_mod
-
-    async def _no_sleep(_):
-        return None
-
-    monkeypatch.setattr(analyze_mod.asyncio, "sleep", _no_sleep)
+def test_analyze_task_discipline_sync_stub(client, api_key):
+    """В дефолтном тестовом окружении qwen3:8b не в available_models,
+    поэтому sync-эндпоинт уходит в stub-ветку и возвращает Прочее/0.0
+    без вызова LLM. Реальный direct-путь покрыт в test_discipline_phase6."""
     r = client.post(
         "/analyze/task-discipline",
         headers={"X-API-Key": api_key},
@@ -116,8 +112,8 @@ def test_analyze_task_discipline_sync(client, api_key, monkeypatch):
     )
     assert r.status_code == 200
     body = r.json()
-    assert "discipline" in body
-    assert 0.0 <= body["confidence"] <= 1.0
+    assert body["discipline"] == "Прочее"
+    assert body["confidence"] == 0.0
 
 
 def test_cancel_pending_job(client, api_key):

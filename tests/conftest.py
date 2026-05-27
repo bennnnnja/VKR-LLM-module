@@ -57,8 +57,9 @@ class FakeOllamaClient:
     def push_error(self, exc: Exception) -> None:
         self._scripted.append(("err", exc))
 
-    async def generate(self, prompt: str, model: str, format: str | None = "json"):
-        self.calls.append({"prompt": prompt, "model": model, "format": format})
+    async def generate(self, prompt: str, model: str, format: str | None = "json",
+                       timeout: float | None = None, **_kw):
+        self.calls.append({"prompt": prompt, "model": model, "format": format, "timeout": timeout})
         if self._scripted:
             entry = self._scripted.pop(0)
             if entry[0] == "ok":

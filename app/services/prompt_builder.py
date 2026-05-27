@@ -42,6 +42,51 @@ class PromptBuilder:
             rubric_block=rubric_block,
         )
 
+    def build_testcases(
+        self,
+        task_description: str,
+        count: int,
+        include_edge_cases: bool,
+        include_negative_cases: bool,
+        language: Optional[str] = None,
+        function_signature: Optional[str] = None,
+        generation_criteria: Optional[dict] = None,
+    ) -> str:
+        template = _load("testcases.txt")
+
+        signature_block = (
+            f"\nСИГНАТУРА ФУНКЦИИ\n{function_signature.strip()}\n"
+            if function_signature and function_signature.strip()
+            else ""
+        )
+
+        if generation_criteria:
+            import json as _json
+            criteria_block = (
+                "\nДОПОЛНИТЕЛЬНЫЕ КРИТЕРИИ ГЕНЕРАЦИИ\n"
+                f"{_json.dumps(generation_criteria, ensure_ascii=False, indent=2)}\n"
+            )
+        else:
+            criteria_block = ""
+
+        return template.format(
+            task_description=task_description.strip(),
+            signature_block=signature_block,
+            criteria_block=criteria_block,
+            count=int(count),
+            language=(language or "python").strip(),
+            include_edge_cases="true" if include_edge_cases else "false",
+            include_negative_cases="true" if include_negative_cases else "false",
+        )
+
+    def build_discipline(self, text: str, *, kind: str) -> str:
+        """kind: 'тест' либо 'задание' — попадёт в фразу 'текст ({text_kind})'."""
+        template = _load("discipline.txt")
+        return template.format(
+            text=text.strip(),
+            text_kind=kind,
+        )
+
     def build_recommendations(
         self,
         task_description: str,
