@@ -26,6 +26,7 @@ def _build_prompt(payload: dict) -> str:
         task_description=payload.get("task_description", ""),
         n=int(payload.get("max_recommendations") or 5),
         discipline=payload.get("discipline"),
+        user_prompt=payload.get("user_prompt"),
     )
 
 

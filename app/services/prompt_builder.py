@@ -10,6 +10,23 @@ def _load(name: str) -> str:
     return (PROMPTS_DIR / name).read_text(encoding="utf-8")
 
 
+def _user_prompt_block(user_prompt: Optional[str]) -> str:
+    """Опциональные указания от пользователя — подмешиваются в конец промпта.
+
+    Идут ПОСЛЕ требований к формату, поэтому явно напоминаем, что
+    JSON-схема ответа остаётся обязательной: пользовательские указания
+    корректируют содержание, но не формат.
+    """
+    if not user_prompt or not user_prompt.strip():
+        return ""
+    return (
+        "\n\nДОПОЛНИТЕЛЬНЫЕ УКАЗАНИЯ ОТ ПОЛЬЗОВАТЕЛЯ\n"
+        f"{user_prompt.strip()}\n"
+        "Эти указания корректируют содержание ответа, но требования к "
+        "JSON-формату выше остаются обязательными."
+    )
+
+
 class PromptBuilder:
     """Сборка промптов для разных задач. Тексты — в app/prompts/*.txt."""
 
@@ -20,6 +37,7 @@ class PromptBuilder:
         student_answer: str,
         discipline: Optional[str] = None,
         rubric: Optional[str] = None,
+        user_prompt: Optional[str] = None,
     ) -> str:
         template = _load("evaluate.txt")
 
@@ -40,7 +58,7 @@ class PromptBuilder:
             reference_answer=reference_answer.strip(),
             student_answer=student_answer.strip(),
             rubric_block=rubric_block,
-        )
+        ) + _user_prompt_block(user_prompt)
 
     def build_testcases(
         self,
@@ -51,6 +69,7 @@ class PromptBuilder:
         language: Optional[str] = None,
         function_signature: Optional[str] = None,
         generation_criteria: Optional[dict] = None,
+        user_prompt: Optional[str] = None,
     ) -> str:
         template = _load("testcases.txt")
 
@@ -77,7 +96,7 @@ class PromptBuilder:
             language=(language or "python").strip(),
             include_edge_cases="true" if include_edge_cases else "false",
             include_negative_cases="true" if include_negative_cases else "false",
-        )
+        ) + _user_prompt_block(user_prompt)
 
     def build_discipline(self, text: str, *, kind: str) -> str:
         """kind: 'тест' либо 'задание' — попадёт в фразу 'текст ({text_kind})'."""
@@ -92,6 +111,7 @@ class PromptBuilder:
         task_description: str,
         n: int,
         discipline: Optional[str] = None,
+        user_prompt: Optional[str] = None,
     ) -> str:
         template = _load("recommendations.txt")
         discipline_suffix = (
@@ -103,7 +123,7 @@ class PromptBuilder:
             discipline_suffix=discipline_suffix,
             task_description=task_description.strip(),
             n=int(n),
-        )
+        ) + _user_prompt_block(user_prompt)
 
     def build_retry(self, original_prompt: str, bad_response: str, error: str) -> str:
         """Универсальный retry-промпт для любой задачи."""

@@ -17,3 +17,8 @@ class RecommendationsRequest(BaseModel):
     discipline: Optional[str] = Field(
         None, description="Дисциплина (используется в системной роли промпта)",
     )
+    user_prompt: Optional[str] = Field(
+        None,
+        description="Опциональные указания пользователя — подмешиваются в промпт "
+                    "перед вызовом LLM (корректируют содержание, не формат)",
+    )

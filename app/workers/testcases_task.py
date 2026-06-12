@@ -24,6 +24,7 @@ def _build_prompt(payload: dict) -> str:
         language=payload.get("language") or "python",
         function_signature=payload.get("function_signature"),
         generation_criteria=payload.get("generation_criteria"),
+        user_prompt=payload.get("user_prompt"),
     )
 
 
