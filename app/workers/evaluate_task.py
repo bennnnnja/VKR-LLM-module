@@ -36,6 +36,7 @@ def _build_prompt(payload: dict) -> str:
         student_answer=payload.get("student_answer", ""),
         discipline=payload.get("discipline"),
         rubric=payload.get("rubric"),
+        user_prompt=payload.get("user_prompt"),
     )
 
 

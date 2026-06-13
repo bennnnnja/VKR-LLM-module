@@ -42,7 +42,9 @@
         </p>
         <div class="grid">
             <div>
-                <label>Тело запроса</label>
+                <label for="ev-user-prompt">user_prompt (опц.)</label>
+                <textarea id="ev-user-prompt" data-user-prompt placeholder="Произвольные указания модели — подмешиваются в промпт, не меняя формат ответа. Например: «будь строже к терминологии»." style="min-height:60px;"></textarea>
+                <label style="margin-top:10px;">Тело запроса</label>
                 <textarea data-input>{
   "task_text": "Объясните своими словами, что такое полиморфизм в ООП.",
   "reference_answer": "Полиморфизм — способность объектов разных типов реагировать на один и тот же вызов по-разному, обычно через переопределение методов.",
@@ -102,7 +104,9 @@
                     <input type="range" id="rec-slider" data-rec-slider min="1" max="10" value="5" style="flex:1;"/>
                     <span data-rec-slider-value style="font-family:ui-monospace,Consolas,monospace;font-weight:600;min-width:24px;text-align:right;">5</span>
                 </div>
-                <label>Тело запроса</label>
+                <label for="rec-user-prompt">user_prompt (опц.)</label>
+                <textarea id="rec-user-prompt" data-user-prompt placeholder="Произвольные указания модели. Например: «хотя бы один вариант — с примером на Python»." style="min-height:60px;"></textarea>
+                <label style="margin-top:10px;">Тело запроса</label>
                 <textarea data-input>{
   "task_description": "Объясните, что такое полиморфизм в ООП, и приведите короткий пример.",
   "max_recommendations": 5,
@@ -158,7 +162,9 @@
                         <input type="checkbox" data-tc-negative /> include_negative_cases
                     </label>
                 </div>
-                <label>Тело запроса</label>
+                <label for="tc-user-prompt">user_prompt (опц.)</label>
+                <textarea id="tc-user-prompt" data-user-prompt placeholder="Произвольные указания модели. Например: «добавь кейс с большими числами около границы int64»." style="min-height:60px;"></textarea>
+                <label style="margin-top:10px;">Тело запроса</label>
                 <textarea data-input>{
   "task_description": "Написать функцию add(a: int, b: int) -> int, возвращающую сумму двух целых чисел.",
   "function_signature": "def add(a: int, b: int) -> int",
@@ -361,6 +367,15 @@ document.querySelectorAll(".section").forEach(section => {
         catch (e) {
             $result.textContent = "Невалидный JSON в теле запроса: " + e.message;
             return;
+        }
+
+        // user_prompt из отдельной textarea подмешивается в body,
+        // если поле есть в секции и пользователь что-то ввёл.
+        const $userPrompt = section.querySelector("[data-user-prompt]");
+        if ($userPrompt) {
+            const v = ($userPrompt.value || "").trim();
+            if (v) body.user_prompt = v;
+            else delete body.user_prompt;  // не отправлять пустую строку
         }
 
         $send.disabled = true;

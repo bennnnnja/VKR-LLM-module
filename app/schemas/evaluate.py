@@ -20,3 +20,8 @@ class EvaluateRequest(BaseModel):
         description="Шкала, в которой нужен итоговый балл. LLM всегда работает в 0..100; "
                     "при max_score!=100 в результат добавляется scaled_score.",
     )
+    user_prompt: Optional[str] = Field(
+        None,
+        description="Опциональные указания пользователя — подмешиваются в промпт "
+                    "перед вызовом LLM (корректируют содержание, не формат)",
+    )

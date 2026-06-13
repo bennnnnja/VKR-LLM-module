@@ -10,6 +10,17 @@ KEY=replace-me-with-strong-random-string   # из .env
 Все 4 async-эндпоинта возвращают `202 + {jobId}`. Результат —
 через `GET /jobs/{jobId}`.
 
+Во всех трёх генерирующих эндпоинтах (`/evaluate/task`,
+`/generate/recommendations`, `/generate/testcases`) есть
+опциональное поле **`user_prompt`** — произвольные указания
+пользователя, которые подмешиваются в промпт перед вызовом LLM.
+Они корректируют содержание ответа, но не формат (JSON-схема
+остаётся обязательной). При отсутствии поля поведение прежнее.
+
+Все строковые поля в результатах — чистый текст без
+markdown-разметки (промпты явно это требуют): фронт отображает
+их как plain text.
+
 ---
 
 ## 1. `POST /evaluate/task` — оценка развёрнутого ответа
@@ -27,7 +38,8 @@ curl -X POST $API/evaluate/task \
     "reference_answer": "Виртуальная память — абстракция ОС, дающая процессу плоское адресное пространство; страницы транслируются в физические через таблицы страниц.",
     "student_answer": "Это когда программа думает что у неё много памяти, а на самом деле ОС её эмулирует.",
     "discipline": "Операционные системы",
-    "max_score": 100
+    "max_score": 100,
+    "user_prompt": "Будь строже к терминологии, это третий курс."
   }'
 ```
 
@@ -86,7 +98,8 @@ curl -X POST $API/generate/recommendations \
   -d '{
     "task_description": "Объясните, что такое полиморфизм в ООП, и приведите короткий пример.",
     "max_recommendations": 4,
-    "discipline": "Программирование"
+    "discipline": "Программирование",
+    "user_prompt": "Хотя бы один вариант — с примером на Python."
   }'
 ```
 
@@ -119,38 +132,64 @@ curl -X POST $API/generate/recommendations \
 
 ## 3. `POST /generate/testcases` — тест-кейсы
 
-Модель: `qwen3-coder-next`. В конфиге предзащиты эта модель
-не объявлена доступной, поэтому реально возвращается
-**stub-результат**, а в `llm_log.model_resolution` пишется `"stub"`.
+Модель: `qwen3-coder-next`. Кейсы — «чёрный ящик» (пары
+вход → ожидаемый результат), типы `basic | edge | negative`.
 
 ### Запрос
 
 ```bash
 curl -X POST $API/generate/testcases \
   -H "X-API-Key: $KEY" -H "Content-Type: application/json" \
-  -d '{"task_text":"Написать функцию add(a:int,b:int)->int","language":"python","count":5}'
+  -d '{
+    "task_description": "Написать функцию add(a: int, b: int) -> int, возвращающую сумму двух целых чисел.",
+    "function_signature": "def add(a: int, b: int) -> int",
+    "language": "python",
+    "count": 5,
+    "include_edge_cases": true,
+    "include_negative_cases": false,
+    "user_prompt": "Добавь кейс с большими числами около границы int64."
+  }'
 ```
 
-### Ответ (предзащита, stub)
+`count`: 1..50 (default 10). `function_signature`,
+`generation_criteria`, `user_prompt` — опциональные.
+
+### Ответ
 
 ```json
 {
   "status": "completed",
   "result": {
-    "cases": [],
-    "note": "STUB: qwen3-coder-next недоступна, тест-кейсы не сгенерированы."
+    "cases": [
+      {
+        "ordinal_number": 1,
+        "description": "Сумма двух положительных чисел",
+        "input": "2 3",
+        "expected_output": "5",
+        "type": "basic"
+      },
+      {
+        "ordinal_number": 2,
+        "description": "Сложение с нулём",
+        "input": "0 7",
+        "expected_output": "7",
+        "type": "edge"
+      }
+    ]
   },
   "llm_log": {
     "target_model": "qwen3-coder-next",
     "actual_model": "qwen3-coder-next",
-    "model_resolution": "stub",
-    "duration_ms": 1000
+    "model_resolution": "direct",
+    "duration_ms": 8412,
+    "retries": 0
   }
 }
 ```
 
-В целевой конфигурации (`AVAILABLE_MODELS` содержит
-`qwen3-coder-next`) — реальные тест-кейсы (фаза 6+).
+Если модель не объявлена в `AVAILABLE_MODELS`, при
+`FALLBACK_STRATEGY=stub` вернётся stub-результат с
+`model_resolution: "stub"` и пустым `cases`.
 
 ---
 

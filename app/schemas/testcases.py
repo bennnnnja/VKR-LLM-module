@@ -34,3 +34,8 @@ class TestcasesRequest(BaseModel):
         None,
         description="Свободный bag параметров генерации (передаётся в промпт как контекст)",
     )
+    user_prompt: Optional[str] = Field(
+        None,
+        description="Опциональные указания пользователя — подмешиваются в промпт "
+                    "перед вызовом LLM (корректируют содержание, не формат)",
+    )
